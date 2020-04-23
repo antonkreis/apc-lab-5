@@ -29,7 +29,7 @@ unsigned int fromBCD(unsigned char bcd) {
 	low = low >> 4;
 	high = high >> 4;
 	high *= 10;
-	return (int)(high + low);
+	return (unsigned int)(high + low);
 }
 
 unsigned char toBCD(unsigned int num) {
