@@ -16,7 +16,6 @@ void interrupt int_delay_new(...) {
 }
 
 void interrupt int_alarm_new(...) {
-	//sound(500);
 	alarm_flag = 1;
 	int_alarm_old();
 }
@@ -148,8 +147,12 @@ void delayMS() {
 	} while (!scanf("%hu", &delay) || delay < 0 || delay > 65535);
 
 
-	int_delay_old = getvect(0x70); //4ah
+	int_delay_old = getvect(0x70); 
 	setvect(0x70, int_delay_new);
+
+	outp(0xA1, inp(0xA1) & 0xFE); // enable interrupts from RTC
+
+
 	outp(0x70, 0xB);
 	outp(0x71, inp(0x71) | 0x40);
 
