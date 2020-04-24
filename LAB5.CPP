@@ -144,11 +144,14 @@ void delayMS() {
 	do {
 		rewind(stdin);
 		printf("Enter the delay in ms (1 - 65535): ");
-	} while (!scanf("%hu", &delay) || delay < 0 || delay > 65535);
+	} while (!scanf("%hu", &delay) || delay < 1 || delay > 65535);
 
 
 	int_delay_old = getvect(0x70); 
+
+	_disable();
 	setvect(0x70, int_delay_new);
+	_enable();
 
 	outp(0xA1, inp(0xA1) & 0xFE); // enable interrupts from RTC
 
@@ -156,7 +159,7 @@ void delayMS() {
 	outp(0x70, 0xB);
 	outp(0x71, inp(0x71) | 0x40);
 
-
+	printf("Start of delay.\n");
 	while (1) {
 		if (counter == delay) {
 			printf("End of delay.\n");
@@ -167,7 +170,9 @@ void delayMS() {
 	outp(0x70, 0xB);
 	outp(0x71, inp(0x71) & 0xBF); //10111111
 
+	_disable();
 	setvect(0x70, int_delay_old);
+	_enable();
 }
 
 void alarmClock() {
@@ -177,12 +182,24 @@ void alarmClock() {
 	unsigned int hour, minute, second;
 	alarm_flag = 0;
 	printf("Enter time:\n");
-	printf("Hour: ");
-	scanf("%u", &hour);
-	printf("Minute: ");
-	scanf("%u", &minute);
-	printf("Second: ");
-	scanf("%u", &second);
+
+	do {
+		rewind(stdin);
+		printf("Hour (0-23): ");
+	} while (!scanf("%u", &hour) || hour < 0 || hour > 23);
+
+	do {
+		rewind(stdin);
+		printf("Minute (0-59): ");
+	} while (!scanf("%u", &minute) || minute < 0 || minute > 59);
+
+	do {
+		rewind(stdin);
+		printf("Second (0-59): ");
+	} while (!scanf("%u", &second) || second < 0 || second > 59);
+
+
+	outp(0xA1, inp(0xA1) & 0xFE); // enable interrupts from RTC
 
 	outp(0x70, 0x01);
 	outp(0x71, toBCD(second));
@@ -194,7 +211,9 @@ void alarmClock() {
 	outp(0x71, toBCD(hour));
 
 	int_alarm_old = getvect(0x4A);
+	_disable();
 	setvect(0x4A, int_alarm_new);
+	_enable();
 
 	outp(0x70, 0xB);
 	outp(0x71, inp(0x71) | 0x20);
@@ -208,7 +227,9 @@ void alarmClock() {
 
 	outp(0x70, 0xB);
 	outp(0x71, inp(0x71) & 0xDF); //11011111
+	_disable();
 	setvect(0x4A, int_alarm_old);
+	_enable();
 }
 
 
