@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 unsigned short counter;
-int alarm_flag;
+int alarm_flag = 0;
 
 void interrupt(*int_delay_old)(...);
 
@@ -15,9 +15,20 @@ void interrupt int_delay_new(...) {
 	int_delay_old();
 }
 
+
 void interrupt int_alarm_new(...) {
-	alarm_flag = 1;
-	int_alarm_old();
+	_asm {
+		mov ax, 0B800h
+		mov es, ax
+		mov ax, 0F01h
+		mov es : 100, ax
+	}
+	/*_asm {
+		mov ax, 0E07h
+		mov bx, 0
+		int 10h
+	}*/
+	//int_alarm_old();
 }
 
 unsigned int fromBCD(unsigned char bcd) {
@@ -176,6 +187,7 @@ void delayMS() {
 }
 
 void alarmClock() {
+	alarm_flag = 1;
 	printf("=============Alarm clock=============\n");
 	outp(0x70, 0xB);
 	outp(0x71, inp(0x71) & 0xDF); //11011111
@@ -216,20 +228,6 @@ void alarmClock() {
 	_enable();
 
 	outp(0x70, 0xB);
-	outp(0x71, inp(0x71) | 0x20);
-
-	while (1) {
-		if (alarm_flag) {
-			printf("Alarm!!!\n");
-			break;
-		}
-	}
-
-	outp(0x70, 0xB);
-	outp(0x71, inp(0x71) & 0xDF); //11011111
-	_disable();
-	setvect(0x4A, int_alarm_old);
-	_enable();
 }
 
 
@@ -247,7 +245,7 @@ int main() {
 		printf("Choose an option ");
 		option = getch();
 		switch (option) {
-		case '1': 
+		case '1':
 			system("cls");
 			getTime();
 			getch();
@@ -257,7 +255,7 @@ int main() {
 			setTime();
 			getch();
 			break;
-		case '3': 
+		case '3':
 			system("cls");
 			delayMS();
 			getch();
@@ -268,6 +266,13 @@ int main() {
 			getch();
 			break;
 		case '5':
+			if (alarm_flag) {
+				outp(0x70, 0xB);
+				outp(0x71, inp(0x71) & 0xDF); //11011111
+				_disable();
+				setvect(0x4A, int_alarm_old);
+				_enable();
+			}
 			return 0;
 		default:;
 		}
