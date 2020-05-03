@@ -4,7 +4,12 @@
 #include <stdlib.h>
 
 unsigned short counter;
-int alarm_flag = 0;
+int alarm_flag;
+
+struct VIDEO {
+	unsigned char symb;
+	unsigned char attr;
+};
 
 void interrupt(*int_delay_old)(...);
 
@@ -15,20 +20,19 @@ void interrupt int_delay_new(...) {
 	int_delay_old();
 }
 
+void print_message() {
+	VIDEO far* screen = (VIDEO far*)MK_FP(0xB800, 0x0064);
+	screen->symb = 'A';
+	screen->attr = 0x5E;
+	outp(0x70, 0xB);
+	outp(0x71, inp(0x71) & 0xDF); //11011111
+	_disable();
+	setvect(0x4A, int_alarm_old);
+	_enable();
+}
 
 void interrupt int_alarm_new(...) {
-	_asm {
-		mov ax, 0B800h
-		mov es, ax
-		mov ax, 0F01h
-		mov es : 100, ax
-	}
-	/*_asm {
-		mov ax, 0E07h
-		mov bx, 0
-		int 10h
-	}*/
-	//int_alarm_old();
+	print_message();
 }
 
 unsigned int fromBCD(unsigned char bcd) {
@@ -89,17 +93,17 @@ void setTime() {
 		rewind(stdin);
 		printf("Month (1-12): ");
 	} while (!scanf("%u", &month) || month < 1 || month > 12);
-	
+
 	do {
 		rewind(stdin);
 		printf("Week (1-7, Sun - 1): ");
 	} while (!scanf("%u", &week) || week < 1 || week > 7);
-	
+
 	do {
 		rewind(stdin);
 		printf("Day (1-31): ");
 	} while (!scanf("%u", &day) || day < 1 || day > 31);
-	
+
 	do {
 		rewind(stdin);
 		printf("Hour (0-23): ");
@@ -114,7 +118,7 @@ void setTime() {
 		rewind(stdin);
 		printf("Second (0-59): ");
 	} while (!scanf("%u", &second) || second < 0 || second > 59);
-	
+
 	do {
 		outp(0x70, 0xA);
 		state = inp(0x71) & 0x80;
@@ -158,7 +162,7 @@ void delayMS() {
 	} while (!scanf("%hu", &delay) || delay < 1 || delay > 65535);
 
 
-	int_delay_old = getvect(0x70); 
+	int_delay_old = getvect(0x70);
 
 	_disable();
 	setvect(0x70, int_delay_new);
@@ -187,7 +191,6 @@ void delayMS() {
 }
 
 void alarmClock() {
-	alarm_flag = 1;
 	printf("=============Alarm clock=============\n");
 	outp(0x70, 0xB);
 	outp(0x71, inp(0x71) & 0xDF); //11011111
@@ -228,6 +231,7 @@ void alarmClock() {
 	_enable();
 
 	outp(0x70, 0xB);
+	outp(0x71, inp(0x71) | 0x20);
 }
 
 
@@ -266,13 +270,6 @@ int main() {
 			getch();
 			break;
 		case '5':
-			if (alarm_flag) {
-				outp(0x70, 0xB);
-				outp(0x71, inp(0x71) & 0xDF); //11011111
-				_disable();
-				setvect(0x4A, int_alarm_old);
-				_enable();
-			}
 			return 0;
 		default:;
 		}
