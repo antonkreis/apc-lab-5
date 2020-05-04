@@ -3,6 +3,7 @@
 #include <conio.h>
 #include <stdlib.h>
 
+char temp;
 unsigned short counter;
 int alarm_flag;
 
@@ -20,20 +21,23 @@ void interrupt int_delay_new(...) {
 	int_delay_old();
 }
 
-void print_message() {
+
+void interrupt int_alarm_new(...) {
 	VIDEO far* screen = (VIDEO far*)MK_FP(0xB800, 0x0064);
 	screen->symb = 'A';
 	screen->attr = 0x5E;
-	outp(0x70, 0xB);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0xB);
+	}
+	else {
+		outp(0x70, 0xB);
+	}
 	outp(0x71, inp(0x71) & 0xDF); //11011111
 	_disable();
 	setvect(0x4A, int_alarm_old);
 	_enable();
-}
-
-void interrupt int_alarm_new(...) {
-	print_message();
-	int_alarm_old();
+    int_alarm_old();
 }
 
 unsigned int fromBCD(unsigned char bcd) {
@@ -56,19 +60,61 @@ unsigned char toBCD(unsigned int num) {
 
 void getTime() {
 	printf("=============Get Time=============\n");
-	outp(0x70, 0x00); //second
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x00);
+	}
+	else {
+		outp(0x70, 0x00);
+	}
 	int second = fromBCD(inp(0x71));
-	outp(0x70, 0x02); //minute
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x02);
+	}
+	else {
+		outp(0x70, 0x02);
+	}
 	int minute = fromBCD(inp(0x71));
-	outp(0x70, 0x04); //hour	
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x04);
+	}
+	else {
+		outp(0x70, 0x04);
+	}
 	int hour = fromBCD(inp(0x71));
-	outp(0x70, 0x06); //day of week 
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x06);
+	}
+	else {
+		outp(0x70, 0x06);
+	}
 	int week = fromBCD(inp(0x71));
-	outp(0x70, 0x07); //day of month
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x07);
+	}
+	else {
+		outp(0x70, 0x07);
+	}
 	int day = fromBCD(inp(0x71));
-	outp(0x70, 0x08); //month
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x08);
+	}
+	else {
+		outp(0x70, 0x08);
+	}
 	int month = fromBCD(inp(0x71));
-	outp(0x70, 0x09); //year
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x09);
+	}
+	else {
+		outp(0x70, 0x09);
+	}
 	int year = fromBCD(inp(0x71));
 	printf("The current date and time:\n");
 	printf("Year: %d\n", year);
@@ -79,6 +125,8 @@ void getTime() {
 	printf("Minute: %d\n", minute);
 	printf("Second: %d\n", second);
 }
+
+
 
 void setTime() {
 	printf("=============Set Time=============\n");
@@ -121,35 +169,98 @@ void setTime() {
 	} while (!scanf("%u", &second) || second < 0 || second > 59);
 
 	do {
-		outp(0x70, 0xA);
+		temp = inp(0x70);
+		if (temp >= 0x80) {
+			outp(0x70, 0x80 | 0xA);
+		}
+		else {
+			outp(0x70, 0xA);
+		}
 		state = inp(0x71) & 0x80;
 	} while (state);
-	outp(0x70, 0xB);
+
+
+
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0xB);
+	}
+	else {
+		outp(0x70, 0xB);
+	}
 	outp(0x71, inp(0x71) | 0x80);
 
-	outp(0x70, 0x00);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x00);
+	}
+	else {
+		outp(0x70, 0x00);
+	}
 	outp(0x71, toBCD(second));
 
-	outp(0x70, 0x02);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x02);
+	}
+	else {
+		outp(0x70, 0x02);
+	}
 	outp(0x71, toBCD(minute));
 
-	outp(0x70, 0x04);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x04);
+	}
+	else {
+		outp(0x70, 0x04);
+	}
 	outp(0x71, toBCD(hour));
 
-	outp(0x70, 0x06);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x06);
+	}
+	else {
+		outp(0x70, 0x06);
+	}
 	outp(0x71, toBCD(week));
 
-	outp(0x70, 0x07);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x07);
+	}
+	else {
+		outp(0x70, 0x07);
+	}
 	outp(0x71, toBCD(day));
 
-	outp(0x70, 0x08);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x08);
+	}
+	else {
+		outp(0x70, 0x08);
+	}
 	outp(0x71, toBCD(month));
 
-	outp(0x70, 0x09);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x09);
+	}
+	else {
+		outp(0x70, 0x09);
+	}
 	outp(0x71, toBCD(year));
 
 
-	outp(0x70, 0xB);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0xB);
+	}
+	else {
+		outp(0x70, 0xB);
+	}
 	outp(0x71, inp(0x71) & 0x7F);
 }
 
@@ -171,8 +282,13 @@ void delayMS() {
 
 	outp(0xA1, inp(0xA1) & 0xFE); // enable interrupts from RTC
 
-
-	outp(0x70, 0xB);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0xB);
+	}
+	else {
+		outp(0x70, 0xB);
+	}
 	outp(0x71, inp(0x71) | 0x40);
 
 	printf("Start of delay.\n");
@@ -183,7 +299,13 @@ void delayMS() {
 		}
 	}
 
-	outp(0x70, 0xB);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0xB);
+	}
+	else {
+		outp(0x70, 0xB);
+	}
 	outp(0x71, inp(0x71) & 0xBF); //10111111
 
 	_disable();
@@ -193,8 +315,17 @@ void delayMS() {
 
 void alarmClock() {
 	printf("=============Alarm clock=============\n");
-	outp(0x70, 0xB);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0xB);
+	}
+	else {
+		outp(0x70, 0xB);
+	}
 	outp(0x71, inp(0x71) & 0xDF); //11011111
+	_disable();
+	setvect(0x4A, int_alarm_old);
+	_enable();
 	unsigned int hour, minute, second;
 	alarm_flag = 0;
 	printf("Enter time:\n");
@@ -217,13 +348,31 @@ void alarmClock() {
 
 	outp(0xA1, inp(0xA1) & 0xFE); // enable interrupts from RTC
 
-	outp(0x70, 0x01);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x01);
+	}
+	else {
+		outp(0x70, 0x01);
+	}
 	outp(0x71, toBCD(second));
 
-	outp(0x70, 0x03);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x03);
+	}
+	else {
+		outp(0x70, 0x03);
+	}
 	outp(0x71, toBCD(minute));
 
-	outp(0x70, 0x05);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0x05);
+	}
+	else {
+		outp(0x70, 0x05);
+	}
 	outp(0x71, toBCD(hour));
 
 	int_alarm_old = getvect(0x4A);
@@ -231,13 +380,20 @@ void alarmClock() {
 	setvect(0x4A, int_alarm_new);
 	_enable();
 
-	outp(0x70, 0xB);
+	temp = inp(0x70);
+	if (temp >= 0x80) {
+		outp(0x70, 0x80 | 0xB);
+	}
+	else {
+		outp(0x70, 0xB);
+	}
 	outp(0x71, inp(0x71) | 0x20);
 }
 
 
 int main() {
 	char option;
+	int_alarm_old = getvect(0x4A);
 	while (1)
 	{
 		system("cls");
