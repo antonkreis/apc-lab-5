@@ -33,6 +33,7 @@ void print_message() {
 
 void interrupt int_alarm_new(...) {
 	print_message();
+	int_alarm_old();
 }
 
 unsigned int fromBCD(unsigned char bcd) {
